@@ -11,7 +11,7 @@ CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
 OUTPUT_FILENAME = "recorded_audio.wav"
-TIME_TO_RECORD = 3
+TIME_TO_RECORD = 2
 
 #instantiate
 audio = pyaudio.PyAudio()
@@ -52,6 +52,31 @@ def fft_thread():
             #add output frequencies to the list
             output_frequencies.append(positive_maximum_frequencies)
 
+def freq_to_note(frequency):
+    if frequency == 0:
+        return
+    #key number = 12 log_2 (f/440) + 49:
+    computer_shift = 1
+    key_number = int(12 * numpy.log2(frequency/440)+49+computer_shift)
+    note_dict = {
+        1: "A",
+        2: "A#",
+        3: "B",
+        4: "C",
+        5: "C#",
+        6: "D",
+        7: "D#",
+        8: "E",
+        9: "F",
+        10: "F#",
+        11: "G",
+        12: "G#"
+    }
+    note_name = note_dict[key_number % 12]
+    note_number = (key_number//12) + 1
+    note = note_name + str(note_number)
+    return note
+
 
 #start thread to begin processing data
 fft_thread = threading.Thread(target=fft_thread, args=[])
@@ -75,8 +100,12 @@ while True:
 finished_recording = True
 fft_thread.join()
 
-print(output_frequencies)
-print(len(output_frequencies))
+for freq in output_frequencies:
+    try:
+        print(freq_to_note(freq[0]))
+    except:
+        print("issue processing")
+
 
 #close up the stream
 stream.stop_stream()
