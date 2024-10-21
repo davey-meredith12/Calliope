@@ -12,7 +12,7 @@ CHANNELS = 1
 RATE = 44100
 CHUNK = 2048
 OUTPUT_FILENAME = "recorded_audio.wav"
-TIME_TO_RECORD = 2
+TIME_TO_RECORD = 10
 
 #instantiate
 audio = pyaudio.PyAudio()
@@ -34,8 +34,14 @@ def fft_thread():
             N = CHUNK
             R = RATE
 
+
             queue_data = fft_queue.get()
             queue_data = numpy.frombuffer(queue_data, dtype=numpy.int16)
+
+            #ignore if volume is too low
+            if numpy.max(queue_data) < 400:
+                # print("Volume is to small: ", numpy.max(queue_data) )
+                continue
 
             fft_result = scipy.fft.fft(queue_data)
             # absolute value result to avoid imaginary numbers
@@ -52,6 +58,7 @@ def fft_thread():
             positive_maximum_frequencies = maximum_frequencies[maximum_frequencies > 0]
             #add output frequencies to the list
             output_frequencies.append(positive_maximum_frequencies)
+            print(frequency_note_conversion.freq_to_note(positive_maximum_frequencies[0]))
 
 
 #start thread to begin processing data
@@ -75,13 +82,6 @@ while True:
 
 finished_recording = True
 fft_thread.join()
-
-for freq in output_frequencies:
-    try:
-        print(frequency_note_conversion.freq_to_note(freq[0]))
-    except:
-        print("issue processing")
-
 
 #close up the stream
 stream.stop_stream()

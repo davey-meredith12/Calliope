@@ -3,7 +3,6 @@ import numpy
 def freq_to_note(frequency):
     if frequency <= 0:
         return
-    print("frequency being input ", frequency)
     #key number = 12 log_2 (f/440) + 49:
     key_number = round(12 * numpy.log2(frequency/440)+49)
     note_dict = {
