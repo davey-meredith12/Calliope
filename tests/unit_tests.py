@@ -1,5 +1,5 @@
 import unittest
-from frequency_note_conversion import freq_to_note
+from calliope.frequency_note_conversion import freq_to_note
 
 
 class MyTestCase(unittest.TestCase):
