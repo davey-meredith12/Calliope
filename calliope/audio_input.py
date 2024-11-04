@@ -1,49 +1,37 @@
 import pyaudio
-import wave
 import time
 import numpy
 import scipy
 import threading
 import queue
-import frequency_note_conversion
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 CHUNK = 2048
 OUTPUT_FILENAME = "recorded_audio.wav"
-TIME_TO_RECORD = 2
+TIME_TO_RECORD = 10
 
-def get_audio_input():
-    # instantiate
-    audio = pyaudio.PyAudio()
-    # set up stream
-    stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
-    # read incoming audio
-    frames = []
+class AudioInput:
+    is_streaming: bool
+    fft_queue: queue.Queue
+    _thread: threading.Thread
 
-    start_time = time.time()
-    fft_queue = queue.Queue()
-    finished_recording = False
-    output_frequencies: queue.Queue = queue.Queue()
+    def __init__(self):
+        self._thread = threading.Thread(target=self._stream, args=[])
+        self.fft_queue = queue.Queue()
 
-    # A function that will run on a thread that utilizes a queue to process data using fft.
-    # All the frequencies will be put into the output_frequencies array
-    def fft_thread():
-        while not finished_recording or fft_queue.qsize() > 0:
-            if fft_queue.qsize() > 0:
-                N = CHUNK
-                R = RATE
-
-                queue_data = fft_queue.get()
-                queue_data = numpy.frombuffer(queue_data, dtype=numpy.int16)
-
-                # ignore if volume is too low
-                if numpy.max(queue_data) < 400:
-                    # print("Volume is to small: ", numpy.max(queue_data) )
+    def start(self):
+        self._thread.start()
+        while self._thread.is_alive():
+            try:
+                buffer = self.fft_queue.get(timeout=1)
+                array = numpy.frombuffer(buffer, dtype=numpy.int16)
+                if numpy.max(array) < 400:
+                    # Not enough information to process
                     continue
 
-                fft_result = scipy.fft.fft(queue_data)
+                fft_result = scipy.fft.fft(array)
                 # absolute value result to avoid imaginary numbers
                 fft_result = numpy.abs(fft_result)
                 # normalize result
@@ -52,52 +40,30 @@ def get_audio_input():
 
                 relative_maximums, _ = scipy.signal.find_peaks(normalized_fft_result, height=.7)
                 # inverse of sample rate
-                d = 1 / R
-                frequencies = scipy.fft.fftfreq(N, d)
+                d = 1 / RATE
+                frequencies = scipy.fft.fftfreq(CHUNK, d)
                 maximum_frequencies = frequencies[relative_maximums]
-                positive_maximum_frequencies = maximum_frequencies[maximum_frequencies > 0]
-                # add output frequencies to the list
-                output_frequencies.put(positive_maximum_frequencies)
-                for frequency in positive_maximum_frequencies:
-                        print(frequency_note_conversion.freq_to_note(frequency), end=" ")
-                print("")
-                #print(frequency_note_conversion.freq_to_note(positive_maximum_frequencies[0]))
+                yield maximum_frequencies[maximum_frequencies > 0]
+            except queue.Empty:
+                # If the queue is empty, cycle to see if thread is still active
+                continue
 
-    # start thread to begin processing data
-    fft_thread = threading.Thread(target=fft_thread, args=[])
-    fft_thread.start()
+        self._thread.join()
+        # close up the stream
 
-    # start recording
-    while True:
-        try:
-            # perform fft here
-            data = stream.read(CHUNK)
-            frames.append(data)
-            fft_queue.put(data)
-
-        except Exception as e:
-            print("Exception Occurred: ", e)
-            break
-
-        if time.time() - start_time >= TIME_TO_RECORD:
-            break
-
-    finished_recording = True
-    fft_thread.join()
-
-    # close up the stream
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-
-    # write to audio file
-    wave_file = wave.open(OUTPUT_FILENAME, 'wb')
-    wave_file.setnchannels(CHANNELS)
-    wave_file.setsampwidth(audio.get_sample_size(FORMAT))
-    wave_file.setframerate(RATE)
-    wave_file.writeframes(b''.join(frames))
-    wave_file.close()
-
-if __name__ == '__main__':
-    get_audio_input()
-
+    def _stream(self):
+        # set up stream
+        start_time = time.time()
+        audio = pyaudio.PyAudio()
+        stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+        while time.time() - start_time < TIME_TO_RECORD:
+            try:
+                self.fft_queue.put(stream.read(CHUNK))
+            except Exception as e:
+                print("Exception Occurred: ", e)
+                break
+        # close down input stream
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+        print("Streaming Closed!")
