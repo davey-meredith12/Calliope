@@ -26,3 +26,43 @@ def freq_to_note(frequency):
         note_number = (key_number // 12) + 1
     note = note_name + str(note_number)
     return note
+
+def note_to_freq(note):
+    if(note == "R"):
+        return 0
+
+    if(note[1] == "#"):
+        note_number = int(note[2])
+        note_name = note[0] + note[1]
+    else:
+        note_name = note[0]
+        note_number = int(note[1])
+
+    #octave difference from A4
+    octave_semitone = (note_number - 4)*12
+    note_dict = {
+        "C": -9,
+        "C#": -8,
+        "D": -7,
+        "D#": -6,
+        "E": -5,
+        "F": -4,
+        "F#": -3,
+        "G": -2,
+        "G#": -1,
+        "A": 0,
+        "A#": 1,
+        "B": 2
+    }
+    #note difference from A4
+    note_semitone = note_dict[note_name]
+
+    semitone_difference = note_semitone + octave_semitone
+    freq = 2**(semitone_difference/12) * 440
+    return freq
+
+
+
+
+
+

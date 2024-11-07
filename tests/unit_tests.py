@@ -1,5 +1,5 @@
 import unittest
-from calliope.frequency_note_conversion import freq_to_note
+from calliope.frequency_note_conversion import freq_to_note, note_to_freq
 
 
 class MyTestCase(unittest.TestCase):
@@ -92,6 +92,22 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual("A#7", freq_to_note(3729.3100))  # A#7
         self.assertEqual("B7", freq_to_note(3951.0660))  # B7
         self.assertEqual("C8", freq_to_note(4186.0090))  # C8
+
+    def test_note_to_frequency(self):
+        self.assertAlmostEqual(27.5000, note_to_freq("A0"), places=1)  # A0
+        self.assertAlmostEqual(29.1352, note_to_freq("A#0"), places=1)  # A#0
+        self.assertAlmostEqual(30.8677, note_to_freq("B0"), places=1)  # B0
+        self.assertAlmostEqual(32.7032, note_to_freq("C1"), places=1)  # C1
+        self.assertAlmostEqual(34.6478, note_to_freq("C#1"), places=1)  # C#1
+        self.assertAlmostEqual(36.7081, note_to_freq("D1"), places=1)  # D1
+        self.assertAlmostEqual(38.8909, note_to_freq("D#1"), places=1)  # D#1
+        self.assertAlmostEqual(41.2034, note_to_freq("E1"), places=1)  # E1
+        self.assertAlmostEqual(43.6535, note_to_freq("F1"), places=1)  # F1
+        self.assertAlmostEqual(46.2493, note_to_freq("F#1"), places=1)  # F#1
+        self.assertAlmostEqual(49.0000, note_to_freq("G1"), places=1)  # G1
+        self.assertAlmostEqual(51.9131, note_to_freq("G#1"), places=1)  # G#1
+        self.assertAlmostEqual(55.0000, note_to_freq("A1"), places=1)  # A1
+        self.assertAlmostEqual(58.2705, note_to_freq("A#1"), places=1)  # A#1
 
 
 if __name__ == '__main__':
