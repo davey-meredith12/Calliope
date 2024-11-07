@@ -109,6 +109,8 @@ class MyTestCase(unittest.TestCase):
         self.assertAlmostEqual(55.0000, note_to_freq("A1"), places=1)  # A1
         self.assertAlmostEqual(58.2705, note_to_freq("A#1"), places=1)  # A#1
 
+        self.assertAlmostEqual(440.0000, note_to_freq("A4"), places=1) #A4
+
 
 if __name__ == '__main__':
     unittest.main()
