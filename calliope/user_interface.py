@@ -30,9 +30,33 @@ class Cube:
         (7, 4), # BRB - BRB
         (7, 6), # BRB - BLT
     )
+    _faces = (
+        (0, 1, 2, 3),  # Front
+        (4, 5, 6, 7),  # Back
+        (2, 3, 7, 6),  # Left
+        (0, 1, 5, 4),  # Right
+        (1, 2, 6, 5),  # Top
+        (0, 3, 7, 4),  # Bottom
+    )
+    _colors = (
+        (1.0, 0.0, 0.0), # Red
+        (0.0, 1.0, 0.0), # Green
+        (0.0, 0.0, 1.0), # Blue
+        (1.0, 1.0, 0.0), # Yellow
+        (0.0, 1.0, 1.0), # Cyan
+        (1.0, 0.0, 1.0), # Magenta
+    )
 
     def draw(self):
-        glColor(0.0, 0.0, 0.0, 1.0)
+        glBegin(GL_QUADS)
+        for i, face in enumerate(self._faces):
+            glColor3fv(self._colors[i])
+            for vertex in face:
+                glVertex3fv(self._vertices[vertex])
+        glEnd()
+
+        glColor3fv((0.0, 0.0, 0.0))
+        glLineWidth(2)
         glBegin(GL_LINES)
         for edge in self._edges:
             for vertex in edge:
