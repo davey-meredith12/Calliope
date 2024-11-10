@@ -7,14 +7,14 @@ class Cube:
         # Column 0 - Left:   -1, Right: +1
         # Column 1 - Bottom: -1, Top:   +1
         # Column 2 - Front:  -1, Back:  +1
-        (+1, -1, -1), # 0: FRB *
-        (+1, +1, -1), # 1: FRT
-        (-1, +1, -1), # 2: FLT *
-        (-1, -1, -1), # 3: FLB
-        (+1, -1, +1), # 4: BRB
-        (+1, +1, +1), # 5: BRT *
-        (-1, +1, +1), # 6: BLT
-        (-1, -1, +1), # 7: BLB *
+        (+1, -1, -1), # *0: Front, Right, Bottom
+        (+1, +1, -1), #  1: Front, Right, Top
+        (-1, +1, -1), # *2: Front, Left,  Top
+        (-1, -1, -1), #  3: Front, Left,  Bottom
+        (+1, -1, +1), #  4: Back,  Right, Bottom
+        (+1, +1, +1), # *5: Back,  Right, Top
+        (-1, +1, +1), #  6: Back,  Left,  Top
+        (-1, -1, +1), # *7: Back,  Left,  Bottom
     )
     _edges = (
         (0, 1), # FRB - FRT
@@ -60,6 +60,8 @@ class App:
         self._surface = pygame.display.set_mode(self.size, pygame.OPENGL | pygame.DOUBLEBUF)
 
         pygame.display.set_caption('Muse')
+        pygame.time.set_timer(pygame.USEREVENT, 10)
+
         gluPerspective(45, self.width / self.height, 0.005, 100.0)
         glTranslatef(0.0, 0.0, -5)
         glRotatef(0, 0, 0, 0)
@@ -69,14 +71,16 @@ class App:
         return True
 
     def on_event(self, event):
-        if event.type == pygame.QUIT:
+        if event.type == pygame.USEREVENT:
+            glRotatef(1, 3, 1, 1)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            self._cube.draw()
+            pygame.display.flip()
+        elif event.type == pygame.QUIT:
             self._running = False
 
     def on_loop(self):
-        glRotatef(1, 3, 1, 1)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self._cube.draw()
-        pygame.display.flip()
+        pass
 
     def on_render(self):
         pass
@@ -91,8 +95,6 @@ class App:
                 self.on_event(event)
             self.on_loop()
             self.on_render()
-            pygame.display.flip()
-            pygame.time.wait(10)
         self.on_cleanup()
 
 if __name__ == '__main__':

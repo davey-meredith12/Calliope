@@ -271,5 +271,5 @@ test = ["Cython", "array-api-strict (>=2.0)", "asv", "gmpy2", "hypothesis (>=6.3
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "4be70e0e585e93e54a79c2c2bb92abeda1e7b3ba347fab636a26f7a74cc9f4e8"
+python-versions = "~3.11"
+content-hash = "2ef8dd5e75011f9b879ad721c958393891f214ec9f57b49d519512fa03a6f531"
