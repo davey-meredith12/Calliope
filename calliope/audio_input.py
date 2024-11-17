@@ -13,49 +13,19 @@ OUTPUT_FILENAME = "recorded_audio.wav"
 TIME_TO_RECORD = 10
 
 class AudioInput:
-    _stream_thread: threading.Thread
-    _decode_thread: threading.Thread
-    _stream_queue: queue.Queue
-    _decode_queue: queue.Queue
-    _running: bool
+    is_streaming: bool
+    fft_queue: queue.Queue
+    _thread: threading.Thread
 
     def __init__(self):
-        self._stream_thread = threading.Thread(target=self._stream, args=[])
-        self._decode_thread = threading.Thread(target=self._decode, args=[])
-        self._stream_queue = queue.Queue()
-        self._decode_queue = queue.Queue()
+        self._thread = threading.Thread(target=self._stream, args=[])
+        self.fft_queue = queue.Queue()
 
     def start(self):
-        self._stream_thread.start()
-        self._decode_thread.start()
-
-    def stop(self):
-        self._stream_thread.join()
-        # close up the stream
-
-    def _stream(self):
-        # set up stream
-        print("Input stream starting!")
-        start_time = time.time()
-        audio = pyaudio.PyAudio()
-        stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
-        while time.time() - start_time < TIME_TO_RECORD:
+        self._thread.start()
+        while self._thread.is_alive():
             try:
-                self._stream_queue.put(stream.read(CHUNK))
-            except Exception as e:
-                print("Exception Occurred: ", e)
-                break
-        # close down input stream
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
-        print("Input stream exiting!")
-
-    def _decode(self):
-        print("Decode stream starting!")
-        while self._stream_thread.is_alive():
-            try:
-                buffer = self._stream_queue.get(timeout=1)
+                buffer = self.fft_queue.get(timeout=1)
                 array = numpy.frombuffer(buffer, dtype=numpy.int16)
                 if numpy.max(array) < 400:
                     # Not enough information to process
@@ -77,3 +47,23 @@ class AudioInput:
             except queue.Empty:
                 # If the queue is empty, cycle to see if thread is still active
                 continue
+
+        self._thread.join()
+        # close up the stream
+
+    def _stream(self):
+        # set up stream
+        start_time = time.time()
+        audio = pyaudio.PyAudio()
+        stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+        while time.time() - start_time < TIME_TO_RECORD:
+            try:
+                self.fft_queue.put(stream.read(CHUNK))
+            except Exception as e:
+                print("Exception Occurred: ", e)
+                break
+        # close down input stream
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+        print("Streaming Closed!")
