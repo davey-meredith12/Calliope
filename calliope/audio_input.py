@@ -9,7 +9,6 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 CHUNK = 2048
-OUTPUT_FILENAME = "recorded_audio.wav"
 TIME_TO_RECORD = 10
 
 class AudioInput:
@@ -27,7 +26,8 @@ class AudioInput:
             try:
                 buffer = self.fft_queue.get(timeout=1)
                 array = numpy.frombuffer(buffer, dtype=numpy.int16)
-                if numpy.max(array) < 400:
+
+                if numpy.max(array) < 3000:
                     # Not enough information to process
                     continue
 
