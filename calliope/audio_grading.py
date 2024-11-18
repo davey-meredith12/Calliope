@@ -1,12 +1,11 @@
 import time
 import numpy as np
-from frequency_note_conversion import note_to_freq
+from frequency_note_conversion import note_to_freq, freq_to_note
 
-FREQ_DIFF_ALLOWED = 1
 
-def _correct_contains_input_tolerance(input: float, arr) -> bool:
+def _correct_contains_input(input: str, arr) -> bool:
     for i in range(len(arr)):
-        if abs(input - arr[i]) <= FREQ_DIFF_ALLOWED:
+        if input == arr[i-1]:
             return True
     return False
 
@@ -17,32 +16,49 @@ def _notes_arr_to_freq_arr(notes):
         freq = []
         for note in note_arr:
             freq.append(note_to_freq(note))
-            to_return.append(freq)
+        to_return.append(freq)
     return to_return
+
+# def _notes_arr_to_bool_arr(notes):
+#     to_return = []
+#     for note_arr in notes:
+#         freq = []
+#         for note in note_arr:
+#             freq.append(False)
+#         to_return.append(freq)
+#     return to_return
+
 
 class AudioGrading:
     tune_arr: list[list[str]]
     bpm: int
-    correct_notes: list[list[float]]
+    correct_freqs: list[list[float]]
+    correct_notes: list[list[str]]
     start_time: float
 
     def __init__(self, tune_arr: list[list[str]], bpm: int):
         self.tune_arr = tune_arr
         self.bpm = bpm
-        self.correct_notes = _notes_arr_to_freq_arr(tune_arr)
+        self.correct_freqs = _notes_arr_to_freq_arr(tune_arr)
+        self.correct_notes = tune_arr
         self.start_time = time.time()
 
     # Compared one at a time against the correct_notes
     # Must be called timed based on the beat, timed for quarter notes currently
     def _compare(self, input: list[float], time_since_start: float):
         arr_loc = round(time_since_start / (60 / self.bpm))
+        note_input = []
+        for freq in input:
+            note_input.append(freq_to_note(freq))
 
-        if arr_loc >= len(self.correct_notes):
+        if arr_loc >= len(self.correct_freqs):
             return
         #compare arrays with tolerance of values,try and match the input against the output
         output = []
         for i in range(len(input)):
-            output.append(_correct_contains_input_tolerance(input[i], self.correct_notes[arr_loc]))
+            i_correct = _correct_contains_input(note_input[i], self.correct_notes[arr_loc])
+            #self.bool_notes[arr_loc][i] = i_correct
+            output.append(i_correct)
         return output
 
     #expects to be sent a new "input" on each call
@@ -54,6 +70,16 @@ class AudioGrading:
             input: list[float] = yield
             yield self._compare(input, time_since_start)
 
+    # def get_final_grade(self):
+    #     correct = 0
+    #     total = 0
+    #     for bool_arr in self.bool_notes:
+    #         for bool in bool_arr:
+    #             total += 1
+    #             if bool == True:
+    #                 correct += 1
+    #
+    #     return correct/total
 
 #currently written for quarter notes
 #simple_tune = [["A4"], ["R"], ["A4"], ["R"]]

@@ -27,7 +27,7 @@ class AudioInput:
                 buffer = self.fft_queue.get(timeout=1)
                 array = numpy.frombuffer(buffer, dtype=numpy.int16)
 
-                if numpy.max(array) < 3000:
+                if numpy.max(array) < 500:
                     # Not enough information to process
                     continue
 
@@ -38,12 +38,13 @@ class AudioInput:
                 fft_max = numpy.max(fft_result)
                 normalized_fft_result = fft_result / fft_max
 
-                relative_maximums, _ = scipy.signal.find_peaks(normalized_fft_result, height=.7)
+                relative_maximums, _ = scipy.signal.find_peaks(normalized_fft_result, height=.95)
                 # inverse of sample rate
                 d = 1 / RATE
                 frequencies = scipy.fft.fftfreq(CHUNK, d)
                 maximum_frequencies = frequencies[relative_maximums]
                 yield maximum_frequencies[maximum_frequencies > 0]
+
             except queue.Empty:
                 # If the queue is empty, cycle to see if thread is still active
                 continue
