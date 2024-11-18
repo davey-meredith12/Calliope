@@ -1,9 +1,7 @@
-from typing import Callable
-
 import pygame
-from pygame import TEXTINPUT
 
-add: Callable[[int, int], int] = lambda i, j: i + j
+NOTE_KEY = "pqrstuvwxyz{|}~`abcdefgohijklmnPQRSTUVW_XYZ[\]^@ABCDEFGOHIJKLMN"
+NOTE_LTR = "ABCDEFGABCDEFGAABCDEFGABBCDEFGAABCDEFGABBCDEFGAABCDEFGABBCDEFGA"
 
 SCORE = (
     "'&=4=R=R=V=V='W=W=f==='U=U=T=T='S=S=b==='V=V=U=U='T=T=c==!",
@@ -27,8 +25,11 @@ QUARTER_NOTES = "'&=P=Q=R=S=T=U=V=W=_=X=Y=Z=[=\=]=^!"
 #               |  a b c d e f g a b B C D E F G A|
 EIGHTH_NOTES = "'&=@=A=B=C=D=E=F=G=O=H=I=J=K=L=M=N!"
 
-WHOLE_TEXT = "A   B   C   D   E   F   G   A   B   C   D   E   F   G   A"
-NOTE_TEXT = "A B C D E F G A B B C D E F G A"
+WHOLE_TEXT = "ABCDEFGABCDEFGA"
+PARTIAL_TEXT = "ABCDEFGABBCDEFGA"
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 class UserInterface:
     size: tuple[int, int]
@@ -37,40 +38,44 @@ class UserInterface:
     _clock: pygame.time.Clock
     _surface: pygame.SurfaceType
     _running: bool
-    _whole_font: pygame.font.Font
-    _text_font: pygame.font.Font
     _note_font: pygame.font.Font
+    _whole_size: tuple[int, int]
+    _text_font: pygame.font.Font
+    
     _score: list[tuple[pygame.Surface, tuple[int, int]]]
     _notes: list[tuple[pygame.Surface, tuple[int, int]]]
     _text: list[tuple[pygame.Surface, tuple[int, int]]]
+    _note_dict: dict[str, str]
 
     def __init__(self):
         self.size = self.width, self.height = 1280, 960
         self._running = False
+        self._note_dict = {}
+        for key, ltr in zip(NOTE_KEY, NOTE_LTR):
+            self._note_dict[key] = ltr
 
     def _on_start(self):
         pygame.init()
         self._clock = pygame.time.Clock()
         self._surface = pygame.display.set_mode(self.size)
-        self._whole_font = pygame.font.SysFont('Futura', 32)
-        self._text_font = pygame.font.SysFont('Futura', 32)
         self._note_font = pygame.font.Font('Musiqwik.ttf', 70)
-        self._score = [
-            (self._note_font.render(SCORE[0], True, (0, 0, 0)), (7, 25)),
-            (self._note_font.render(SCORE[1], True, (0, 0, 0)), (7, 175))
-        ]
+        self._text_font = pygame.font.SysFont('Futura', 32)
         self._notes = [
-            (self._note_font.render(WHOLE_NOTES, True, (0, 0, 0)), (7, 375)),
-            (self._note_font.render(TIMING, True, (0, 0, 0)), (900, 375)),
-            (self._note_font.render(HALF_NOTES, True, (0, 0, 0)), (7, 550)),
-            (self._note_font.render(QUARTER_NOTES, True, (0, 0, 0)), (647, 550)),
-            (self._note_font.render(EIGHTH_NOTES, True, (0, 0, 0)), (7, 725))
+            (self._note_font.render(SCORE[0], True, BLACK), (7, 50)),
+            (self._note_font.render(SCORE[1], True, BLACK), (7, 225)),
+            (self._note_font.render(WHOLE_NOTES, True, BLACK), (7, 400)),
+            (self._note_font.render(TIMING, True, BLACK), (900, 400)),
+            (self._note_font.render(HALF_NOTES, True, BLACK), (7, 575)),
+            (self._note_font.render(QUARTER_NOTES, True, BLACK), (647, 575)),
+            (self._note_font.render(EIGHTH_NOTES, True, BLACK), (7, 750))
         ]
         self._text = [
-            (self._whole_font.render(WHOLE_TEXT, True, (0, 0, 0)), (80, 350)),
-            (self._text_font.render(NOTE_TEXT, True, (0, 0, 0)), (80, 525)),
-            (self._text_font.render(NOTE_TEXT, True, (0, 0, 0)), (715, 525)),
-            (self._text_font.render(NOTE_TEXT, True, (0, 0, 0)), (80, 700)),
+            (self._label(SCORE[0]), (7, 25)),
+            (self._label(SCORE[1]), (7, 200)),
+            (self._label(WHOLE_NOTES), (7, 375)),
+            (self._label(HALF_NOTES), (7, 550)),
+            (self._label(QUARTER_NOTES), (647, 550)),
+            (self._label(EIGHTH_NOTES), (7, 725)),
         ]
 
         pygame.display.set_caption('Calliope')
@@ -86,15 +91,26 @@ class UserInterface:
             self._running = False
 
     def _on_update(self):
-        self._surface.fill((255, 255, 255))
-        for score in self._score:
-            self._surface.blit(*score)
+        self._surface.fill(WHITE)
         for notes in self._notes:
             self._surface.blit(*notes)
         for text in self._text:
             self._surface.blit(*text)
         pygame.display.flip()
         self._clock.tick(60)
+
+    def _label(self, notes):
+        widths = list(metrics[4] for metrics in self._note_font.metrics(notes))
+        height = self._text_font.get_height()
+        label = pygame.Surface((sum(widths), height))
+        label.fill(WHITE)
+        position = 0
+        for (i, width) in enumerate(widths):
+            letter = self._note_dict.get(notes[i])
+            if letter:
+                label.blit(self._text_font.render(letter, True, BLACK), (position, 0))
+            position += width
+        return label
 
     def run(self):
         self._running = self._on_start()
