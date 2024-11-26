@@ -1,0 +1,51 @@
+from music_queue import Note
+
+TWINKLE_SONG = [
+    "'&=4=R=R=V=V='W=W=f==='U=U=T=T='S=S=b==='V=V=U=U='T=T=c==!",
+    "'&====V=V=U=U='T-=T=c==='R=R=V=V='W=W=f==='U=U=T=T='S=S=b==!"]
+
+TWINKLE_BPM = 88
+
+TWINKLE_NOTES = [
+    Note("C5", 4),
+    Note("C5", 4),
+    Note("G5", 4),
+    Note("G5", 4),
+    Note("A6", 4),
+    Note("A6", 4),
+    Note("G5", 2),
+    Note("F5", 4),
+    Note("F5", 4),
+    Note("E5", 4),
+    Note("E5", 4),
+    Note("D5", 4),
+    Note("D5", 4),
+    Note("C5", 2),
+    Note("G5", 4),
+    Note("G5", 4),
+    Note("F5", 4),
+    Note("F5", 4),
+    Note("E5", 4),
+    Note("E5", 4),
+    Note("D5", 2),
+    Note("G5", 4),
+    Note("G5", 4),
+    Note("F5", 4),
+    Note("F5", 4),
+    Note("E5", 4),
+    Note("E5", 4),
+    Note("D5", 2),
+    Note("C5", 4),
+    Note("C5", 4),
+    Note("G5", 4),
+    Note("G5", 4),
+    Note("A6", 4),
+    Note("A6", 4),
+    Note("G5", 2),
+    Note("F5", 4),
+    Note("F5", 4),
+    Note("E5", 4),
+    Note("E5", 4),
+    Note("D5", 4),
+    Note("D5", 4),
+    Note("C5", 2)]
