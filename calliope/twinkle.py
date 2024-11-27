@@ -1,8 +1,8 @@
 from music_queue import Note
 
 TWINKLE_SONG = [
-    "'&=4=R=R=V=V='W=W=f==='U=U=T=T='S=S=b==='V=V=U=U='T=T=c==!",
-    "'&====V=V=U=U='T-=T=c==='R=R=V=V='W=W=f==='U=U=T=T='S=S=b==!"]
+    "'&=4=R=R=V=V='W=W=f==='U=U=T=T='S=S=b==='V=V=U=U='T=T=c===!",
+    "'&====V=V=U=U='T=T=c==='R=R=V=V='W=W=f==='U=U=T=T='S=S=b===!"]
 
 TWINKLE_BPM = 88
 

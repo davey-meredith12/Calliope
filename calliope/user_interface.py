@@ -60,6 +60,7 @@ EIGHTH_NOTES = "'&=@=A=B=C=D=E=F=G=O=H=I=J=K=L=M=N!"
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
+VIOLET = (255, 0, 255)
 
 class UserInterface:
     _song: [str]
@@ -79,6 +80,7 @@ class UserInterface:
     _score: list[tuple[pygame.Surface, tuple[int, int]]]
     _note: list[tuple[pygame.Surface, tuple[int, int]]]
     _text: list[tuple[pygame.Surface, tuple[int, int]]]
+    _pointer: tuple[pygame.Surface, tuple[int, int]]
     _note_dict: dict[str, str]
 
     _played: list[str]
@@ -121,6 +123,7 @@ class UserInterface:
             (self._create_beat(GREEN, 100, 1), (1050, 150)),
             (self._create_beat(GREEN, 100, 50), (1050, 150))
         ]
+        self._update_pointer(BLACK)
         pygame.display.set_caption('Calliope')
         pygame.time.set_timer(pygame.USEREVENT, 30_000 // self._bpm)
         return True
@@ -136,7 +139,9 @@ class UserInterface:
         if note:
             if note.length == START:
                 self._note_started(note)
+                self._update_pointer(VIOLET)
             else:
+                self._update_pointer(BLACK)
                 self._on_note_played(note)
         self._surface.fill(WHITE)
         for notes in self._note:
@@ -144,6 +149,7 @@ class UserInterface:
         for text in self._text:
             self._surface.blit(*text)
         self._surface.blit(*self._beat[self._beat_count % 2])
+        self._surface.blit(*self._pointer, None, pygame.BLEND_SUB)
         pygame.display.flip()
         self._clock.tick(20)
 
@@ -165,6 +171,18 @@ class UserInterface:
         beat.fill(WHITE)
         pygame.draw.circle(beat, color, (size//2, size//2), radius)
         return beat
+
+    def _update_pointer(self, color):
+        row = self._position // 54
+        indent = 1 if row > 0 else 0
+        offset = self._position % 54 + 4 + indent
+        widths = list(metrics[4] for metrics in self._note_font.metrics(self._song[row]))
+        (x, y) = self._note[row][1]
+        x += sum(widths[:offset])
+        y += 15 # Shift the bar down a bit
+        pointer = pygame.Surface((widths[offset], self._note_font.get_height() - 20))
+        pointer.fill(color)
+        self._pointer = (pointer, (x, y))
 
     def _note_started(self, note):
         pass
