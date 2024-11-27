@@ -1,7 +1,8 @@
+import queue
 import threading, time
 from collections import namedtuple
 
-Note = namedtuple("Note", ["note", "time"])
+Note = namedtuple("Note", ["octave", "letter", "length"])
 
 START = 0
 WHOLE = 1
@@ -10,24 +11,35 @@ QUARTER = 4
 EIGHTH = 8
 
 class MusicQueue:
-    _played: [Note]
+    _played: queue.Queue
     _thread: threading.Thread
+    _stop: bool
 
     def __init__(self):
-        self._played = []
+        self._played = queue.Queue()
 
-    def simulate(self, notes, bpm):
-        self._thread = threading.Thread(target=self._play, args=[notes, bpm])
+    def play(self, notes, bpm):
+        self._thread = threading.Thread(target=self._run, args=[notes, bpm], daemon=True)
+        self._thread.start()
 
-    def _play(self, notes, bpm):
-        millis = 60_000 // bpm
+    def put(self, note):
+        self._played.put(note)
+
+    def poll(self):
+        return None if self._played.empty() else self._played.get()
+
+    def _run(self, notes, bpm):
+        seconds = 60.0 / bpm
+        time.sleep(5.0) # Pause before first note
         for note in notes:
-            delay = millis # Default to EIGHTH notes
-            if note.time == QUARTER:
-                delay = millis * 2
-            elif note.time == HALF:
-                delay = millis * 4
-            elif note.time == WHOLE:
-                delay = millis * 8
+            delay = seconds / 2 # Default to EIGHTH notes
+            if note.length == QUARTER:
+                delay = seconds
+            elif note.length == HALF:
+                delay = seconds * 2
+            elif note.length == WHOLE:
+                delay = seconds * 4
+            self.put(Note(note.octave, note.letter, START))
             time.sleep(delay)
-            self._played.append(note)
+            self.put(note)
+
